@@ -1,13 +1,22 @@
 <script setup lang="ts">
-// This starter template is using Vue 3 <script setup> SFCs
-// Check out https://vuejs.org/api/sfc-script-setup.html#script-setup
-import HelloWorld from './components/HelloWorld.vue';
+import { ref } from 'vue';
+import Table from './packages/p-table/index.vue';
+import { tableDataList } from './packages/p-table/index';
 </script>
 
-<template></template>
+<template>
+  <Table :tableData="tableDataList" />
+</template>
 
 <style scoped>
-.logo {
+#app {
+  padding: 0;
+  height: 100vh;
+  width: 100vw;
+  background-color: rgb(245, 245, 245);
+}
+
+/* .logo {
   height: 6em;
   padding: 1.5em;
   will-change: filter;
@@ -17,5 +26,5 @@ import HelloWorld from './components/HelloWorld.vue';
 }
 .logo.vue:hover {
   filter: drop-shadow(0 0 2em #42b883aa);
-}
+} */
 </style>

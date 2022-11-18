@@ -5,15 +5,15 @@ import { tableDataList } from './packages/p-table/index';
 </script>
 
 <template>
-  <Table :tableData="tableDataList" />
+    <Table :tableData="tableDataList" />
 </template>
 
 <style scoped>
 #app {
-  padding: 0;
-  height: 100vh;
-  width: 100vw;
-  background-color: rgb(245, 245, 245);
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
+    background-color: rgb(245, 245, 245);
 }
 
 /* .logo {

@@ -3,12 +3,19 @@ import { ref } from 'vue';
 import Table from './packages/p-table/index.vue';
 import { tableColumnsList, tableDataList } from './packages/p-table/index';
 
+
 const tableSetUp = ref({
     readonly: true,
     tableColumns: tableColumnsList,
     highlightCurrentRow: true,
     scrollbarAlwaysOn: false,
-    sortOrders: [],
+    maxHeight: 300,
+    showSelection: true,
+    showSummary: ['a', 'b'],
+    defaultSort: {
+        prop: 'a', order: 'ascending'
+    },
+    sortOrders: ['descending', 'ascending'],
     showOperation: {
         showDelLine: true,
         showEditLine: true,
@@ -30,7 +37,7 @@ const handleCurrentChange = (e) => {
 }
 
 const 选中 = () => {
-    pTable.value.setCurrentRow(tableData.value[0])
+    pTable.value.setCurrentRow([tableData.value[0], tableData.value[2]])
 }
 
 const handleSelectionChange = (e) => {
@@ -53,7 +60,6 @@ const handleSelectionChange = (e) => {
             </el-input>
         </template>
     </Table>
-    <el-button @click="选中"></el-button>
 </template>
 
 <style scoped>

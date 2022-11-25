@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
-import { ElTable } from 'element-plus'
+import { ElTable } from 'element-plus';
 import Sortable from 'sortablejs';
 
 const props = defineProps({
@@ -21,14 +21,14 @@ const tableRef = ref<InstanceType<typeof ElTable>>()
 const tableSetUp: Domains.tableSetUp = {}
 
 const pData = ref({
-    currentRow: {},
+    currentRow: {}, // 当前行数据
     tableData: [],
     tableSetUp: tableSetUp,
     pageSize: 10,
     pageSizeOptions: [10, 20, 50, 100, 200, 500, 1000],
 })
 
-const emits = defineEmits(['handleDelete', 'handleEdit', 'handleView', 'handleCurrentChange', 'handleSelectionChange'])
+const emits = defineEmits(['handleDelete', 'handleEdit', 'handleView', 'handleCurrentChange', 'handleSelectionChange', 'rowDblclick'])
 
 const randomId = ref(`pTable${Number(Math.random() * 10000).toFixed(0)}`)
 
@@ -37,47 +37,68 @@ const tableClass = computed(() => {
 })
 
 const tabelHeight = computed(() => {
-    return props.tableSetUp.height ? props.tableSetUp.height : '300'
+    return props.tableSetUp.tabelHeight ? props.tableSetUp.tabelHeight : '300'
 })
 
 const showSummary = computed(() => {
-    if (typeof pData.value.tableSetUp.showSummary ==
-        'boolean' && pData.value.tableSetUp.showSummary) return true
+    if (pData.value.tableSetUp.showSummary) return true
     if (Array.isArray(pData.value.tableSetUp.showSummary)) return true
 })
 
-const handleDelete = (index: String, row: Object) => {
+// 默认过长显示
+const showOverflowTooltip = computed(() => {
+    return (e) => {
+        if (e !== undefined && typeof e == 'boolean') return e
+        return true
+    }
+})
+
+const handleDelete = (index: String, row: object) => {
     emits('handleDelete', index, row)
 }
 
-const handleEdit = (index: String, row: Object) => {
+const handleEdit = (index: String, row: object) => {
     emits('handleEdit', index, row)
 }
 
-const handleView = (index: String, row: Object) => {
+const handleView = (index: String, row: object) => {
     emits('handleView', index, row)
 }
 
-const handleCurrentChange = (val: Object) => {
+const handleCurrentChange = (val: object) => {
     emits('handleCurrentChange', val)
 }
 
-const handleSelectionChange = (val: Object) => {
+const handleSelectionChange = (val: object) => {
     emits('handleSelectionChange', val)
 }
 
-const setCurrentRow = (e: Object) => {
+const setCurrentRow = (e: object) => {
     tableRef.value!.setCurrentRow(e)
 }
 
-const getDetails = (e: Object) => {
-    pData.value.currentRow = e
-    if (pData.value.tableSetUp.showSelection && !pData.value.tableSetUp.selectFn) {
-        tableRef.value.toggleRowSelection(e);
+const getDetails = (e: object, column: Object) => {
+    if (!column) {
+        pData.value.currentRow = e
+        if (pData.value.tableSetUp.showSelection && !pData.value.tableSetUp.selectFn) {
+            tableRef.value.toggleRowSelection(e);
+        }
     }
 }
 
-const changeTableSort = (e: Object) => {
+const selectFn = (row, index) => {
+    if (props.tableSetUp.selectFn) {
+        if (props.tableSetUp.selectFn.call(null, row, index)) return true
+    } else {
+        return false
+    }
+}
+
+const rowDblClick = (row: object, column: object, event: object) => {
+    emits("rowDblclick", row, column, event)
+}
+
+const changeTableSort = (e: object) => {
     console.log(e)
     debugger
 }
@@ -124,8 +145,9 @@ const getSummaries = (param: Domains.SummaryMethodProps) => {
         }
         const values = data.map((item: any) => Number(item[column.property]))
         // 可以指定列计算，默认全部列
-        if (Array.isArray(pData.value.tableSetUp.showSummary) &&
-            pData.value.tableSetUp.showSummary?.indexOf(column.property) !== -1) {
+        if ((Array.isArray(pData.value.tableSetUp.showSummary) &&
+            pData.value.tableSetUp.showSummary?.indexOf(column.property) !== -1) ||
+            pData.value.tableSetUp.showSummary == true) {
             if (!values.every((value) => Number.isNaN(value))) {
                 sums[index] = `${values.reduce((prev, curr) => {
                     const value = Number(curr)
@@ -136,7 +158,7 @@ const getSummaries = (param: Domains.SummaryMethodProps) => {
                     }
                 }, 0)}`
             } else {
-                sums[index] = 'N/A'
+                sums[index] = ''
             }
         } else {
             sums[index] = ''
@@ -148,7 +170,9 @@ const getSummaries = (param: Domains.SummaryMethodProps) => {
 
 
 onMounted(() => {
-    columnDrop();
+    if (pData.value.tableSetUp.draggable == true) {
+        columnDrop();
+    }
 })
 
 defineExpose({
@@ -162,24 +186,26 @@ defineExpose({
          :class="tableClass">
         <el-table :row-key="pData.tableSetUp.id"
                   ref="tableRef"
+                  :height="tabelHeight"
                   :data="pData.tableData"
                   :border="true"
                   :max-height="pData.tableSetUp.maxHeight"
-                  @row-click="getDetails"
                   :highlight-current-row="pData.tableSetUp.highlightCurrentRow"
-                  @current-change="handleCurrentChange"
-                  @selection-change="handleSelectionChange"
                   :scrollbar-always-on:="pData.tableSetUp.scrollbarAlwaysOn"
                   :sort-orders="pData.tableSetUp.sortOrders"
                   :sortable="true"
-                  @sort-change="changeTableSort"
                   :default-sort="pData.tableSetUp.defaultSort"
                   :show-summary="showSummary"
                   :summary-method="getSummaries"
+                  @row-click="getDetails"
+                  @row-dblclick="rowDblClick"
+                  @current-change="handleCurrentChange"
+                  @selection-change="handleSelectionChange"
+                  @sort-change="changeTableSort"
                   style="width: 100%">
             <el-table-column v-if="pData.tableSetUp.showSelection"
                              class-name="ignore-elements"
-                             :selectable="pData.tableSetUp.selectFn"
+                             :selectable="selectFn"
                              type="selection"
                              width="55" />
             <!-- 可编辑表格 -->
@@ -192,7 +218,7 @@ defineExpose({
                                      :formatter="item.formatter"
                                      :type="item.type"
                                      :width="item.width"
-                                     :show-overflow-tooltip="item.showOverflowTooltip"
+                                     :show-overflow-tooltip="showOverflowTooltip(item.showOverflowTooltip)"
                                      :prop="item.prop"
                                      :min-width="item.minWidth"
                                      :label="item.label"
@@ -226,15 +252,15 @@ defineExpose({
                         <el-button size="mini"
                                    type="danger"
                                    v-if="pData.tableSetUp.showOperation.showDelLine"
-                                   @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+                                   @click.native.stop="handleDelete(scope.$index, scope.row)">删除</el-button>
                         <el-button size="mini"
                                    type="primary"
                                    v-if="pData.tableSetUp.showOperation.showEditLine"
-                                   @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
+                                   @click.native.stop="handleEdit(scope.$index, scope.row)">编辑</el-button>
                         <el-button size="mini"
                                    type="success"
                                    v-if="pData.tableSetUp.showOperation.showView"
-                                   @click="handleView(scope.$index, scope.row)">查看</el-button>
+                                   @click.native.stop="handleView(scope.$index, scope.row)">查看</el-button>
                     </template>
                 </el-table-column>
             </template>
@@ -249,7 +275,7 @@ defineExpose({
                                      :width="item.width"
                                      sortable="custom"
                                      :type="item.type"
-                                     :show-overflow-tooltip="item.showOverflowTooltip"
+                                     :show-overflow-tooltip="showOverflowTooltip(item.showOverflowTooltip)"
                                      :prop="item.prop"
                                      :min-width="item.minWidth"
                                      :label="item.label"
@@ -274,15 +300,15 @@ defineExpose({
                         <el-button size="mini"
                                    type="danger"
                                    v-if="pData.tableSetUp.showOperation.showDelLine"
-                                   @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+                                   @click.native.stop="handleDelete(scope.$index, scope.row)">删除</el-button>
                         <el-button size="mini"
                                    type="primary"
                                    v-if="pData.tableSetUp.showOperation.showEditLine"
-                                   @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
+                                   @click.native.stop="handleEdit(scope.$index, scope.row)">编辑</el-button>
                         <el-button size="mini"
                                    type="success"
                                    v-if="pData.tableSetUp.showOperation.showView"
-                                   @click="handleView(scope.$index, scope.row)">查看</el-button>
+                                   @click.native.stop="handleView(scope.$index, scope.row)">查看</el-button>
                     </template>
                 </el-table-column>
             </template>

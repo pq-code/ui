@@ -3,13 +3,17 @@ import { ref } from 'vue';
 import Table from './packages/p-table/index.vue';
 import { tableColumnsList, tableDataList } from './packages/p-table/index';
 
+const selectFn = (row, index) => {
+    if (index === 2) return true
+}
 
 const tableSetUp = ref({
     readonly: true,
     tableColumns: tableColumnsList,
-    highlightCurrentRow: true,
+    highlightCurrentRow: false,
     scrollbarAlwaysOn: false,
     maxHeight: 300,
+    // draggable: true,
     showSelection: true,
     showSummary: ['a', 'b'],
     defaultSort: {
@@ -21,13 +25,16 @@ const tableSetUp = ref({
         showEditLine: true,
         showView: true
     },
+    selectFn: selectFn
 })
+
 
 const pTable = ref()
 
 const tableData = ref(tableDataList)
 
-const handleDelete = () => {
+const handleDelete = (e) => {
+    console.log(e)
     debugger
 }
 
@@ -56,7 +63,6 @@ const handleSelectionChange = (e) => {
         <template v-slot:tableAction="slotProps">
             <el-input size="mini"
                       v-model="slotProps.scope.row['a']">
-
             </el-input>
         </template>
     </Table>

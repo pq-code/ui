@@ -26,11 +26,12 @@ declare namespace Domains {
     sortOrders?: Array<string>;
     defaultSort?: object;
     showSelection?: boolean;
-    selectFn?: boolean;
+    selectFn?: (row: object, index: number) => boolean;
     readonly?: boolean;
     tableColumns?: Array<tableRow>;
     showOperation?: showOperation | boolean;
     showSummary?: boolean | [];
+    draggable?: boolean;
   }
 
   interface Product {

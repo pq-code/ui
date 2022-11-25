@@ -4,6 +4,7 @@ export const tableColumnsList = [
     label: '列表1',
     type: '',
     width: '100',
+    showOverflowTooltip: false,
   },
   {
     prop: 'b',

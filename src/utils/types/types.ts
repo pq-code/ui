@@ -32,6 +32,15 @@ declare namespace Domains {
     showOperation?: showOperation | boolean;
     showSummary?: boolean | [];
     draggable?: boolean;
+    showPagination?: showPagination;
+    pageSize?: string;
+    pageSizeOptions?: Array<string>;
+  }
+
+  interface showPagination {
+    pageSize?: number;
+    pageSizeOptions: Array<Number>;
+    pagerCount?: number;
   }
 
   interface Product {

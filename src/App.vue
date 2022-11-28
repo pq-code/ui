@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import Table from './packages/p-table/index.vue';
+import PTable from './packages/p-table/index.vue';
 import { tableColumnsList, tableDataList } from './packages/p-table/index';
 
 const selectFn = (row, index) => {
@@ -25,7 +25,11 @@ const tableSetUp = ref({
         showEditLine: true,
         showView: true
     },
-    selectFn: selectFn
+    selectFn: selectFn,
+    showPagination: {
+        pageSizeOptions: [10, 20, 50, 100],
+    },
+
 })
 
 
@@ -54,18 +58,18 @@ const handleSelectionChange = (e) => {
 </script>
 
 <template>
-    <Table ref="pTable"
-           :tableData="tableData"
-           :tableSetUp="tableSetUp"
-           @handleCurrentChange="handleCurrentChange"
-           @handleSelectionChange="handleSelectionChange"
-           @handleDelete="handleDelete">
+    <P-Table ref="pTable"
+             :tableData="tableData"
+             :tableSetUp="tableSetUp"
+             @handleCurrentChange="handleCurrentChange"
+             @handleSelectionChange="handleSelectionChange"
+             @handleDelete="handleDelete">
         <template v-slot:tableAction="slotProps">
             <el-input size="mini"
                       v-model="slotProps.scope.row['a']">
             </el-input>
         </template>
-    </Table>
+    </P-Table>
 </template>
 
 <style scoped>

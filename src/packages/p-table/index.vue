@@ -2,6 +2,12 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { ElTable } from 'element-plus';
 import Sortable from 'sortablejs';
+import { component } from 'vue/types/umd';
+import { el } from 'element-plus/es/locale';
+import PPagination from '../p-pagination/index.vue'
+
+
+const emits = defineEmits(['handleDelete', 'handleEdit', 'handleView', 'handleCurrentChange', 'handleSelectionChange', 'rowDblclick'])
 
 const props = defineProps({
     tableSetUp: {
@@ -23,12 +29,9 @@ const tableSetUp: Domains.tableSetUp = {}
 const pData = ref({
     currentRow: {}, // 当前行数据
     tableData: [],
+    pageTableData: [],
     tableSetUp: tableSetUp,
-    pageSize: 10,
-    pageSizeOptions: [10, 20, 50, 100, 200, 500, 1000],
 })
-
-const emits = defineEmits(['handleDelete', 'handleEdit', 'handleView', 'handleCurrentChange', 'handleSelectionChange', 'rowDblclick'])
 
 const randomId = ref(`pTable${Number(Math.random() * 10000).toFixed(0)}`)
 
@@ -168,8 +171,33 @@ const getSummaries = (param: Domains.SummaryMethodProps) => {
     return sums
 }
 
+// 分页
+const sizeChange = (e) => {
+    pageSizeDatalFn(props.tableData, e)
+}
+// 当前页
+const currentChange = (e) => {
+    pData.value.tableData = pData.value.pageTableData[e - 1]
+}
+// 分页数据处理
+const pageSizeDatalFn = (res, pageSize) => {
+    let index = 0
+    pData.value.pageTableData.length = 0
+    while (index < res.length) {
+        pData.value.pageTableData.push(res.slice(index, (index += pageSize)))
+    }
+    pData.value.tableData = pData.value.pageTableData[0]
+}
 
 onMounted(() => {
+    if (pData.value.tableSetUp.showPagination) {
+        if (pData.value.tableSetUp.showPagination.pageSizeOptions) {
+            pageSizeDatalFn(props.tableData, pData.value.tableSetUp.showPagination.pageSizeOptions[0])
+        } else {
+            pageSizeDatalFn(props.tableData, 10)
+        }
+    }
+    // 拖拽
     if (pData.value.tableSetUp.draggable == true) {
         columnDrop();
     }
@@ -313,6 +341,20 @@ defineExpose({
                 </el-table-column>
             </template>
         </el-table>
+        <el-row style="margin-top: 5px;">
+            <el-col :span="16"
+                    style="text-align: center;"
+                    v-if="pData.tableSetUp.showPagination">
+                <P-Pagination :totals="tableData.length"
+                              :pager-count="pData.tableSetUp.showPagination.pagerCount"
+                              :pageSizes="pData.tableSetUp.showPagination.pageSize"
+                              :pageSizeOptions="pData.tableSetUp.showPagination.pageSizeOptions"
+                              @sizeChange="sizeChange"
+                              @currentChange="currentChange"></P-Pagination>
+            </el-col>
+            <!-- <el-col :span="4">
+            </el-col> -->
+        </el-row>
     </div>
 </template>
 <style lang="less" scoped>

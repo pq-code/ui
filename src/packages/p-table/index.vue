@@ -4,7 +4,7 @@ import { ElTable } from 'element-plus';
 import Sortable from 'sortablejs';
 import { component } from 'vue/types/umd';
 import { el } from 'element-plus/es/locale';
-import PPagination from '../p-pagination/index.vue'
+import PPagination from './p-pagination.vue'
 
 
 const emits = defineEmits(['handleDelete', 'handleEdit', 'handleView', 'handleCurrentChange', 'handleSelectionChange', 'rowDblclick'])

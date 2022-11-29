@@ -10,6 +10,7 @@ declare namespace Domains {
     fixed?: boolean | string;
     align?: string;
     slotName?: string;
+    required?: boolean;
   }
 
   interface showOperation {

@@ -8,24 +8,24 @@ const selectFn = (row, index) => {
 }
 
 const tableSetUp = ref({
-    readonly: true,
+    readonly: false,
     tableColumns: tableColumnsList,
     highlightCurrentRow: false,
     scrollbarAlwaysOn: false,
     maxHeight: 300,
-    // draggable: true,
+    draggable: true,
     showSelection: true,
-    showSummary: ['a', 'b'],
-    defaultSort: {
-        prop: 'a', order: 'ascending'
-    },
+    showSummary: ['a', 'b', 'c', 'd'],
+    // defaultSort: {
+    //     prop: 'a', order: 'ascending'
+    // },
     sortOrders: ['descending', 'ascending'],
     showOperation: {
         showDelLine: true,
         showEditLine: true,
         showView: true
     },
-    selectFn: selectFn,
+    // selectFn: selectFn,
     showPagination: {
         pageSizeOptions: [10, 20, 50, 100],
     },
@@ -61,14 +61,14 @@ const handleSelectionChange = (e) => {
     <P-Table ref="pTable"
              :tableData="tableData"
              :tableSetUp="tableSetUp"
-             @handleCurrentChange="handleCurrentChange"
-             @handleSelectionChange="handleSelectionChange"
+             @handleCurrent-change="handleCurrentChange"
+             @handleSelection-change="handleSelectionChange"
              @handleDelete="handleDelete">
-        <template v-slot:tableAction="slotProps">
+        <!-- <template v-slot:tableAction="slotProps">
             <el-input size="mini"
                       v-model="slotProps.scope.row['a']">
             </el-input>
-        </template>
+        </template> -->
     </P-Table>
 </template>
 

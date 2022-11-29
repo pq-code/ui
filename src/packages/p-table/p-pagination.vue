@@ -8,8 +8,8 @@ const props = defineProps({
         default: 100
     },
     pageSizes: {
-        type: String || Number,
-        default: '10' || 10
+        type: Number,
+        default: 10
     },
     pageSizeOptions: {
         type: Array,

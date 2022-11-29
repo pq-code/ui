@@ -6,8 +6,7 @@ import { component } from 'vue/types/umd';
 import { el } from 'element-plus/es/locale';
 import PPagination from './p-pagination.vue'
 
-
-const emits = defineEmits(['handleDelete', 'handleEdit', 'handleView', 'handleCurrentChange', 'handleSelectionChange', 'rowDblclick'])
+const emits = defineEmits(['handleDelete', 'handleEdit', 'handleView', 'handleCurrent-change', 'handleSelection-change', 'rowDblclick'])
 
 const props = defineProps({
     tableSetUp: {
@@ -55,32 +54,36 @@ const showOverflowTooltip = computed(() => {
         return true
     }
 })
-
+// 删除
 const handleDelete = (index: String, row: object) => {
     emits('handleDelete', index, row)
 }
-
+// 编辑
 const handleEdit = (index: String, row: object) => {
     emits('handleEdit', index, row)
 }
-
+// 查看
 const handleView = (index: String, row: object) => {
     emits('handleView', index, row)
 }
-
-const handleCurrentChange = (val: object) => {
-    emits('handleCurrentChange', val)
-}
-
+// 当前所选中的行的数据
+// const handleCurrentChange = (val: object) => {
+//     debugger
+//     emits('handleCurrent-change', val)
+// }
+// 当前所勾选的数据
 const handleSelectionChange = (val: object) => {
-    emits('handleSelectionChange', val)
+    debugger
+    emits('handleSelection-change', val)
 }
 
 const setCurrentRow = (e: object) => {
+    debugger
     tableRef.value!.setCurrentRow(e)
 }
-
+// 解决选中
 const getDetails = (e: object, column: Object) => {
+    console.log(column);
     if (!column) {
         pData.value.currentRow = e
         if (pData.value.tableSetUp.showSelection && !pData.value.tableSetUp.selectFn) {
@@ -88,27 +91,32 @@ const getDetails = (e: object, column: Object) => {
         }
     }
 }
-
+// 是否可以选中设置
 const selectFn = (row, index) => {
     if (props.tableSetUp.selectFn) {
-        if (props.tableSetUp.selectFn.call(null, row, index)) return true
+        if (props.tableSetUp.selectFn.call(null, row, index)) {
+            return true
+        } else {
+            return false
+        }
     } else {
-        return false
+        return true
     }
 }
-
+// 点击
 const rowDblClick = (row: object, column: object, event: object) => {
     emits("rowDblclick", row, column, event)
 }
-
+// 排血
 const changeTableSort = (e: object) => {
     console.log(e)
     debugger
 }
 
-watch(() => props.tableData, (n, o) => {
-    pData.value.tableData = JSON.parse(JSON.stringify(n))
-}, { deep: true, immediate: true })
+// watch(() => props.tableData, (n, o) => {
+//     debugger
+//     pData.value.tableData = JSON.parse(JSON.stringify(n))
+// }, { deep: true, immediate: true })
 
 watch(() => props.tableSetUp, (n, o) => {
     pData.value.tableSetUp = JSON.parse(JSON.stringify(n))
@@ -182,14 +190,21 @@ const currentChange = (e) => {
 // 分页数据处理
 const pageSizeDatalFn = (res, pageSize) => {
     let index = 0
+    let data = JSON.parse(JSON.stringify(res))
     pData.value.pageTableData.length = 0
-    while (index < res.length) {
-        pData.value.pageTableData.push(res.slice(index, (index += pageSize)))
+    while (index < data.length) {
+        pData.value.pageTableData.push(data.slice(index, (index += pageSize)))
     }
     pData.value.tableData = pData.value.pageTableData[0]
 }
 
+// 高级搜索
+const advancedSearch = () => {
+    debugger
+}
+
 onMounted(() => {
+    // 需要分页的时候的数据处理
     if (pData.value.tableSetUp.showPagination) {
         if (pData.value.tableSetUp.showPagination.pageSizeOptions) {
             pageSizeDatalFn(props.tableData, pData.value.tableSetUp.showPagination.pageSizeOptions[0])
@@ -197,7 +212,7 @@ onMounted(() => {
             pageSizeDatalFn(props.tableData, 10)
         }
     }
-    // 拖拽
+    // 拖拽开关
     if (pData.value.tableSetUp.draggable == true) {
         columnDrop();
     }
@@ -227,10 +242,10 @@ defineExpose({
                   :summary-method="getSummaries"
                   @row-click="getDetails"
                   @row-dblclick="rowDblClick"
-                  @current-change="handleCurrentChange"
                   @selection-change="handleSelectionChange"
                   @sort-change="changeTableSort"
                   style="width: 100%">
+
             <el-table-column v-if="pData.tableSetUp.showSelection"
                              class-name="ignore-elements"
                              :selectable="selectFn"
@@ -238,36 +253,40 @@ defineExpose({
                              width="55" />
             <!-- 可编辑表格 -->
             <template v-if="pData.tableSetUp.readonly == false">
-                <template v-for="(item, index) in pData.tableSetUp.tableColumns"
-                          :key="`column_${item.prop}_${index}`">
-                    <!-- 可编辑中默认都是可以编辑的 -->
-                    <el-table-column class-name="draggable"
-                                     :resizable="true"
-                                     :formatter="item.formatter"
-                                     :type="item.type"
-                                     :width="item.width"
-                                     :show-overflow-tooltip="showOverflowTooltip(item.showOverflowTooltip)"
-                                     :prop="item.prop"
-                                     :min-width="item.minWidth"
-                                     :label="item.label"
-                                     :fixed="item.fixed"
-                                     :align="item.align">
-                        <template slot-scope="scope"
-                                  v-slot="scope"
-                                  v-if="item.slotName != null && item.slotName != ''">
-                            <slot :name="item.slotName"
-                                  v-bind:scope="scope"></slot>
-                        </template>
-                        <template slot-scope="scope"
-                                  v-slot="scope"
-                                  v-else>
-                            <el-input size="mini"
-                                      v-if="!item.readonly"
-                                      v-model="scope.row[item.prop]" />
-                        </template>
-                    </el-table-column>
-                    <!-- 单独有某行不想可编辑 -->
-                </template>
+                <!-- 可编辑中默认都是可以编辑的 -->
+                <el-table-column class-name="draggable"
+                                 v-for="(item, index) in pData.tableSetUp.tableColumns"
+                                 :key="`column_${item.prop}_${index}`"
+                                 :resizable="true"
+                                 :formatter="item.formatter"
+                                 :type="item.type"
+                                 :width="item.width"
+                                 :show-overflow-tooltip="showOverflowTooltip(item.showOverflowTooltip)"
+                                 :prop="item.prop"
+                                 :min-width="item.minWidth"
+                                 :label="item.label"
+                                 :fixed="item.fixed"
+                                 :align="item.align">
+                    <template #header
+                              v-if="item.required">
+                        <span style="color:red">*</span>{{ item.label }}
+                    </template>
+                    <template slot-scope="scope"
+                              v-slot="scope"
+                              :key="`input_${scope.$index}_${index}`"
+                              v-if="item.slotName != null && item.slotName != ''">
+                        <slot :name="item.slotName"
+                              v-bind:scope="scope"></slot>
+                    </template>
+                    <template slot-scope="scope"
+                              v-slot="scope"
+                              v-else>
+                        <el-input v-if="!item.readonly"
+                                  :key="`input_${scope.$index}_${index}`"
+                                  v-model="scope.row[item.prop]" />
+                    </template>
+                </el-table-column>
+                <!-- 单独有某行不想可编辑 -->
                 <!-- 常见的3个按钮形式 -->
                 <el-table-column v-if="pData.tableSetUp.showOperation"
                                  class-name="ignore-elements"
@@ -277,16 +296,13 @@ defineExpose({
                                  fixed="right">
                     <template slot-scope="scope"
                               v-slot="scope">
-                        <el-button size="mini"
-                                   type="danger"
+                        <el-button type="danger"
                                    v-if="pData.tableSetUp.showOperation.showDelLine"
                                    @click.native.stop="handleDelete(scope.$index, scope.row)">删除</el-button>
-                        <el-button size="mini"
-                                   type="primary"
+                        <el-button type="primary"
                                    v-if="pData.tableSetUp.showOperation.showEditLine"
                                    @click.native.stop="handleEdit(scope.$index, scope.row)">编辑</el-button>
-                        <el-button size="mini"
-                                   type="success"
+                        <el-button type="success"
                                    v-if="pData.tableSetUp.showOperation.showView"
                                    @click.native.stop="handleView(scope.$index, scope.row)">查看</el-button>
                     </template>
@@ -295,28 +311,27 @@ defineExpose({
 
             <!-- 不可编辑表格 -->
             <template v-else>
-                <template v-for="(item, index) in pData.tableSetUp.tableColumns"
-                          :key="`column_${item.prop}_${index}`">
-                    <el-table-column class-name="draggable"
-                                     :resizable="true"
-                                     :formatter="item.formatter"
-                                     :width="item.width"
-                                     sortable="custom"
-                                     :type="item.type"
-                                     :show-overflow-tooltip="showOverflowTooltip(item.showOverflowTooltip)"
-                                     :prop="item.prop"
-                                     :min-width="item.minWidth"
-                                     :label="item.label"
-                                     :fixed="item.fixed"
-                                     :align="item.align">
-                        <template slot-scope="scope"
-                                  v-slot="scope"
-                                  v-if="item.slotName != null && item.slotName != ''">
-                            <slot :name="item.slotName"
-                                  v-bind:scope="scope"></slot>
-                        </template>
-                    </el-table-column>
-                </template>
+                <el-table-column class-name="draggable"
+                                 :resizable="true"
+                                 v-for="(item, index) in pData.tableSetUp.tableColumns"
+                                 :key="`column_${item.prop}_${index}`"
+                                 :formatter="item.formatter"
+                                 :width="item.width"
+                                 sortable="custom"
+                                 :type="item.type"
+                                 :show-overflow-tooltip="showOverflowTooltip(item.showOverflowTooltip)"
+                                 :prop="item.prop"
+                                 :min-width="item.minWidth"
+                                 :label="item.label"
+                                 :fixed="item.fixed"
+                                 :align="item.align">
+                    <template slot-scope="scope"
+                              v-slot="scope"
+                              v-if="item.slotName != null && item.slotName != ''">
+                        <slot :name="item.slotName"
+                              v-bind:scope="scope"></slot>
+                    </template>
+                </el-table-column>
                 <el-table-column v-if="pData.tableSetUp.showOperation"
                                  class-name="ignore-elements"
                                  key="操作"
@@ -325,16 +340,13 @@ defineExpose({
                                  fixed="right">
                     <template slot-scope="scope"
                               v-slot="scope">
-                        <el-button size="mini"
-                                   type="danger"
+                        <el-button type="danger"
                                    v-if="pData.tableSetUp.showOperation.showDelLine"
                                    @click.native.stop="handleDelete(scope.$index, scope.row)">删除</el-button>
-                        <el-button size="mini"
-                                   type="primary"
+                        <el-button type="primary"
                                    v-if="pData.tableSetUp.showOperation.showEditLine"
                                    @click.native.stop="handleEdit(scope.$index, scope.row)">编辑</el-button>
-                        <el-button size="mini"
-                                   type="success"
+                        <el-button type="success"
                                    v-if="pData.tableSetUp.showOperation.showView"
                                    @click.native.stop="handleView(scope.$index, scope.row)">查看</el-button>
                     </template>
@@ -342,7 +354,7 @@ defineExpose({
             </template>
         </el-table>
         <el-row style="margin-top: 5px;">
-            <el-col :span="16"
+            <el-col :span="20"
                     style="text-align: center;"
                     v-if="pData.tableSetUp.showPagination">
                 <P-Pagination :totals="tableData.length"
@@ -352,8 +364,19 @@ defineExpose({
                               @sizeChange="sizeChange"
                               @currentChange="currentChange"></P-Pagination>
             </el-col>
-            <!-- <el-col :span="4">
-            </el-col> -->
+            <el-col :span="4"
+                    v-if="true">
+                <el-tooltip content="高级搜索"
+                            placement="top"
+                            :open-delay="500">
+                    <el-button type="primary"
+                               link
+                               style="float: right; font-size: 16px; padding-top: 7px; padding-bottom: 7px;"
+                               class="iconfont icon-sousuo"
+                               @click="advancedSearch()">
+                    </el-button>
+                </el-tooltip>
+            </el-col>
         </el-row>
     </div>
 </template>

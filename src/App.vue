@@ -1,21 +1,27 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import PTable from './packages/p-table/index.vue';
-import { tableColumnsList, tableDataList } from './packages/p-table/index';
+import PLazyloading from "./packages/p-lazyLoading/index.vue";
+import { tableColumnsList } from './packages/p-table/index';
+
+import { generateDataFn } from './utils/table'
+
+const data = generateDataFn(10, 10000)
 
 const selectFn = (row, index) => {
     if (index === 2) return true
 }
 
 const tableSetUp = ref({
-    readonly: false,
+    readonly: true,
     tableColumns: tableColumnsList,
     highlightCurrentRow: false,
     scrollbarAlwaysOn: false,
-    maxHeight: 300,
+    // maxHeight: 800,
+    tabelHeight: 500,
     draggable: true,
     showSelection: true,
-    showSummary: ['a', 'b', 'c', 'd'],
+    showSummary: true,
     // defaultSort: {
     //     prop: 'a', order: 'ascending'
     // },
@@ -27,7 +33,8 @@ const tableSetUp = ref({
     },
     // selectFn: selectFn,
     showPagination: {
-        pageSizeOptions: [10, 20, 50, 100],
+        pageSize: 10,
+        pageSizeOptions: [10, 20, 50, 100, 1000, 10000, 100000, 1000000],
     },
 
 })
@@ -35,7 +42,7 @@ const tableSetUp = ref({
 
 const pTable = ref()
 
-const tableData = ref(tableDataList)
+const tableData = ref(data)
 
 const handleDelete = (e) => {
     console.log(e)
@@ -70,6 +77,9 @@ const handleSelectionChange = (e) => {
             </el-input>
         </template> -->
     </P-Table>
+    <!-- <p-lazyloading>
+
+    </p-lazyloading> -->
 </template>
 
 <style scoped>

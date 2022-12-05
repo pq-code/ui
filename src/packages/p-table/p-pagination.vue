@@ -16,6 +16,14 @@ const props = defineProps({
         default() {
             return [10, 20, 50, 100, 200, 500, 1000];
         },
+    },
+    background: {
+        type: Boolean,
+        default: true
+    },
+    pagerCount: {
+        type: Number,
+        default: 5
     }
 });
 
@@ -40,8 +48,8 @@ onMounted(() => {
 <template>
     <el-pagination :total="total"
                    :page-size="pageSize"
-                   background
-                   :pager-count="10"
+                   :background="background"
+                   :pager-count="pagerCount"
                    :page-sizes="pageSizeOptions"
                    layout="prev, pager, next, jumper, sizes, total"
                    @size-change="sizeChange"

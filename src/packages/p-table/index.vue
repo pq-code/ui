@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, onUpdated, ref, watch, nextTick } from 'vue';
 import { ElTable } from 'element-plus';
 import Sortable from 'sortablejs';
 import { component } from 'vue/types/umd';
 import { el } from 'element-plus/es/locale';
-import PPagination from './p-pagination.vue'
+import PPagination from './p-pagination.vue';
+import { dataGrouping } from '../../utils/table';
 
 const emits = defineEmits(['handleDelete', 'handleEdit', 'handleView', 'handleCurrent-change', 'handleSelection-change', 'rowDblclick'])
 
@@ -54,23 +55,28 @@ const showOverflowTooltip = computed(() => {
         return true
     }
 })
+
 // 删除
 const handleDelete = (index: String, row: object) => {
     emits('handleDelete', index, row)
 }
+
 // 编辑
 const handleEdit = (index: String, row: object) => {
     emits('handleEdit', index, row)
 }
+
 // 查看
 const handleView = (index: String, row: object) => {
     emits('handleView', index, row)
 }
+
 // 当前所选中的行的数据
 // const handleCurrentChange = (val: object) => {
 //     debugger
 //     emits('handleCurrent-change', val)
 // }
+
 // 当前所勾选的数据
 const handleSelectionChange = (val: object) => {
     debugger
@@ -81,6 +87,7 @@ const setCurrentRow = (e: object) => {
     debugger
     tableRef.value!.setCurrentRow(e)
 }
+
 // 解决选中
 const getDetails = (e: object, column: Object) => {
     console.log(column);
@@ -91,6 +98,7 @@ const getDetails = (e: object, column: Object) => {
         }
     }
 }
+
 // 是否可以选中设置
 const selectFn = (row, index) => {
     if (props.tableSetUp.selectFn) {
@@ -103,20 +111,17 @@ const selectFn = (row, index) => {
         return true
     }
 }
+
 // 点击
 const rowDblClick = (row: object, column: object, event: object) => {
     emits("rowDblclick", row, column, event)
 }
-// 排血
+
+// 排序
 const changeTableSort = (e: object) => {
     console.log(e)
     debugger
 }
-
-// watch(() => props.tableData, (n, o) => {
-//     debugger
-//     pData.value.tableData = JSON.parse(JSON.stringify(n))
-// }, { deep: true, immediate: true })
 
 watch(() => props.tableSetUp, (n, o) => {
     pData.value.tableSetUp = JSON.parse(JSON.stringify(n))
@@ -174,49 +179,95 @@ const getSummaries = (param: Domains.SummaryMethodProps) => {
         } else {
             sums[index] = ''
         }
-
     })
     return sums
 }
 
+let pageSize = ref(pData.value.tableSetUp.showPagination?.pageSize ? pData.value.tableSetUp.showPagination?.pageSize :
+    pData.value.tableSetUp?.showPagination?.pageSizeOptions[0])
+let pageSizeList = ref() // 未优化的数据
+let startIndex = ref(0) // 列表起始位置
+let endIndex = ref(0) // 列表结束位置
+
 // 分页
 const sizeChange = (e) => {
-    pageSizeDatalFn(props.tableData, e)
-}
-// 当前页
-const currentChange = (e) => {
-    pData.value.tableData = pData.value.pageTableData[e - 1]
-}
-// 分页数据处理
-const pageSizeDatalFn = (res, pageSize) => {
-    let index = 0
-    let data = JSON.parse(JSON.stringify(res))
-    pData.value.pageTableData.length = 0
-    while (index < data.length) {
-        pData.value.pageTableData.push(data.slice(index, (index += pageSize)))
+    pageSize.value = e
+    pageSizeList.value = dataGrouping(props.tableData, e, 1)
+    if (e >= 50) {
+        pData.value.tableData = pageSizeList.value.slice(0, 50)
+    } else {
+        pData.value.tableData = pageSizeList.value.slice(0, e)
     }
-    pData.value.tableData = pData.value.pageTableData[0]
+
 }
 
-// 高级搜索
-const advancedSearch = () => {
-    debugger
+// 当前页
+const currentChange = (e) => {
+    pData.value.tableData = dataGrouping(props.tableData, pageSize.value, e)
 }
+
+onUpdated(() => {
+    // 动态获取表格高度
+    const tabel = document.getElementById(`${randomId.value}`)
+    const arr = tabel?.getElementsByClassName('el-table__inner-wrapper');
+    const target = arr ? arr[0] : {}
+    console.log(target.style.height);
+    debugger
+})
+
+// 虚拟列表
+const handlerLazyLoad = (e) => {
+    if (pageSize.value > 50) {
+        startIndex.value = Math.floor(e.target.scrollTop / 50)
+        endIndex.value = startIndex.value + Math.ceil(500 / 50)
+        pData.value.tableData = pageSizeList.value.slice(startIndex.value, endIndex.value + 20)
+        const tabel = document.getElementById(`${randomId.value}`)
+        const arr = tabel?.getElementsByClassName('el-table__body');
+        const target = arr ? arr[0] : {}
+        target.style.transform = `translate3D(0,${(startIndex.value) * 50}px,0)`
+    }
+}
+
+// 虚拟列表
+const lazyLoading = () => {
+    nextTick(() => {
+        const tabel = document.getElementById(`${randomId.value}`)
+        const arr = tabel?.getElementsByClassName('el-scrollbar__wrap');
+        const target = arr ? arr[arr.length - 1] : {}
+        target.addEventListener('scroll', handlerLazyLoad);
+    })
+};
 
 onMounted(() => {
     // 需要分页的时候的数据处理
     if (pData.value.tableSetUp.showPagination) {
         if (pData.value.tableSetUp.showPagination.pageSizeOptions) {
-            pageSizeDatalFn(props.tableData, pData.value.tableSetUp.showPagination.pageSizeOptions[0])
+            pData.value.tableData = dataGrouping(props.tableData, pageSize.value, 1)
         } else {
-            pageSizeDatalFn(props.tableData, 10)
+            pData.value.tableData = dataGrouping(props.tableData, 10, 1)
         }
     }
     // 拖拽开关
     if (pData.value.tableSetUp.draggable == true) {
         columnDrop();
     }
+    // 数据量大于某个值时开启虚拟列表
+    if (props.tableData.length > endIndex.value) {
+        // 绑定事件
+        nextTick(() => {
+            lazyLoading()
+        })
+    }
 })
+
+// 高级搜索
+const advancedSearch = () => {
+    debugger
+}
+
+const rowStyle = () => {
+    
+}
 
 defineExpose({
     tableRef,
@@ -229,9 +280,10 @@ defineExpose({
          :class="tableClass">
         <el-table :row-key="pData.tableSetUp.id"
                   ref="tableRef"
-                  :height="tabelHeight"
-                  :data="pData.tableData"
                   :border="true"
+                  :row-style="rowStyle"
+                  :data="pData.tableData"
+                  :height="tabelHeight"
                   :max-height="pData.tableSetUp.maxHeight"
                   :highlight-current-row="pData.tableSetUp.highlightCurrentRow"
                   :scrollbar-always-on:="pData.tableSetUp.scrollbarAlwaysOn"
@@ -284,6 +336,7 @@ defineExpose({
                         <el-input v-if="!item.readonly"
                                   :key="`input_${scope.$index}_${index}`"
                                   v-model="scope.row[item.prop]" />
+                        <span v-if="item.prop == 'index' ">{{ scope.$index + 1 }}</span>
                     </template>
                 </el-table-column>
                 <!-- 单独有某行不想可编辑 -->

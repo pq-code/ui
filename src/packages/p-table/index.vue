@@ -5,9 +5,10 @@ import Sortable from 'sortablejs';
 import { component } from 'vue/types/umd';
 import { el } from 'element-plus/es/locale';
 import PPagination from './p-pagination.vue';
-import { dataGrouping } from '../../utils/table';
+import { dataGrouping } from './table';
+import { Domains } from '../../utils/types/types'
 
-const emits = defineEmits(['handleDelete', 'handleEdit', 'handleView', 'handleCurrent-change', 'handleSelection-change', 'rowDblclick'])
+const emits = defineEmits(['handleDelete', 'handleEdit', 'handleView', 'handleCurrent-change', 'handleSelection-change', 'rowDblclick', 'rowStyle'])
 
 const props = defineProps({
     tableSetUp: {
@@ -18,7 +19,9 @@ const props = defineProps({
     },
     tableData: {
         type: Array,
-        default: () => []
+        default() {
+            return []
+        }
     }
 });
 
@@ -31,6 +34,7 @@ const pData = ref({
     tableData: [],
     pageTableData: [],
     tableSetUp: tableSetUp,
+    selectedData: [] // 当前选中的数据
 })
 
 const randomId = ref(`pTable${Number(Math.random() * 10000).toFixed(0)}`)
@@ -50,7 +54,7 @@ const showSummary = computed(() => {
 
 // 默认过长显示
 const showOverflowTooltip = computed(() => {
-    return (e) => {
+    return (e: boolean | any) => {
         if (e !== undefined && typeof e == 'boolean') return e
         return true
     }
@@ -72,13 +76,19 @@ const handleView = (index: String, row: object) => {
 }
 
 // 当前所选中的行的数据
-// const handleCurrentChange = (val: object) => {
-//     debugger
-//     emits('handleCurrent-change', val)
-// }
+const handleCurrentChange = (val: object) => {
+    debugger
+    emits('handleCurrent-change', val)
+}
 
 // 当前所勾选的数据
-const handleSelectionChange = (val: object) => {
+const handleSelectionChange = (val: any) => {
+    if (val.length == 0) {
+        pData.value.selectedData = []
+    } else {
+        pData.value.selectedData = pData.value.selectedData.concat(val)
+    }
+    console.log(pData.value.selectedData);
     debugger
     emits('handleSelection-change', val)
 }
@@ -100,7 +110,7 @@ const getDetails = (e: object, column: Object) => {
 }
 
 // 是否可以选中设置
-const selectFn = (row, index) => {
+const selectFn = (row: object, index: number) => {
     if (props.tableSetUp.selectFn) {
         if (props.tableSetUp.selectFn.call(null, row, index)) {
             return true
@@ -114,6 +124,9 @@ const selectFn = (row, index) => {
 
 // 点击
 const rowDblClick = (row: object, column: object, event: object) => {
+    console.log(row, column, event);
+
+    debugger
     emits("rowDblclick", row, column, event)
 }
 
@@ -139,12 +152,12 @@ const columnDrop = () => {
         animation: 180,
         delay: 0,
         onEnd: (evt: { newIndex: any; oldIndex: any }) => {
-            if (pData.value.tableSetUp.showSelection) {
+            if (pData.value.tableSetUp.showSelection && pData.value.tableSetUp?.tableColumns) {
                 const oldItem = pData.value.tableSetUp.tableColumns.splice(evt.oldIndex - 1, 1)[0];
-                pData.value.tableSetUp.tableColumns.splice(evt.newIndex - 1, 0, oldItem);
-            } else {
-                const oldItem = pData.value.tableSetUp.tableColumns.splice(evt.oldIndex, 1)[0];
-                pData.value.tableSetUp.tableColumns.splice(evt.newIndex, 0, oldItem);
+                pData.value.tableSetUp?.tableColumns.splice(evt.newIndex - 1, 0, oldItem);
+            } else if (pData.value.tableSetUp.tableColumns) {
+                const oldItem = pData.value.tableSetUp?.tableColumns.splice(evt.oldIndex, 1)[0];
+                pData.value.tableSetUp?.tableColumns.splice(evt.newIndex, 0, oldItem);
             }
         },
     });
@@ -154,15 +167,15 @@ const columnDrop = () => {
 const getSummaries = (param: Domains.SummaryMethodProps) => {
     const { columns, data } = param
     const sums: string[] = []
-    columns.forEach((column, index) => {
+    columns.forEach((column: object, index) => {
         if (index === 0 && pData.value.tableSetUp.showSelection) {
             sums[index] = '合计'
             return
         }
-        const values = data.map((item: any) => Number(item[column.property]))
+        const values = data.map((item: any) => Number(item[column?.property]))
         // 可以指定列计算，默认全部列
         if ((Array.isArray(pData.value.tableSetUp.showSummary) &&
-            pData.value.tableSetUp.showSummary?.indexOf(column.property) !== -1) ||
+            pData.value.tableSetUp.showSummary?.indexOf(column?.property) !== -1) ||
             pData.value.tableSetUp.showSummary == true) {
             if (!values.every((value) => Number.isNaN(value))) {
                 sums[index] = `${values.reduce((prev, curr) => {
@@ -190,7 +203,7 @@ let startIndex = ref(0) // 列表起始位置
 let endIndex = ref(0) // 列表结束位置
 
 // 分页
-const sizeChange = (e) => {
+const sizeChange = (e: any) => {
     pageSize.value = e
     pageSizeList.value = dataGrouping(props.tableData, e, 1)
     if (e >= 50) {
@@ -202,7 +215,7 @@ const sizeChange = (e) => {
 }
 
 // 当前页
-const currentChange = (e) => {
+const currentChange = (e: any) => {
     pData.value.tableData = dataGrouping(props.tableData, pageSize.value, e)
 }
 
@@ -211,13 +224,11 @@ onUpdated(() => {
     const tabel = document.getElementById(`${randomId.value}`)
     const arr = tabel?.getElementsByClassName('el-table__inner-wrapper');
     const target = arr ? arr[0] : {}
-    console.log(target.style.height);
-    debugger
 })
 
 // 虚拟列表
 const handlerLazyLoad = (e) => {
-    if (pageSize.value > 50) {
+    if (pageSize.value > 500 || pData.value.tableSetUp.virtualList) {
         startIndex.value = Math.floor(e.target.scrollTop / 50)
         endIndex.value = startIndex.value + Math.ceil(500 / 50)
         pData.value.tableData = pageSizeList.value.slice(startIndex.value, endIndex.value + 20)
@@ -233,15 +244,15 @@ const lazyLoading = () => {
     nextTick(() => {
         const tabel = document.getElementById(`${randomId.value}`)
         const arr = tabel?.getElementsByClassName('el-scrollbar__wrap');
-        const target = arr ? arr[arr.length - 1] : {}
-        target.addEventListener('scroll', handlerLazyLoad);
+        const target = arr ? arr[arr.length - 1] : null
+        if (target) target.addEventListener('scroll', handlerLazyLoad);
     })
 };
 
 onMounted(() => {
     // 需要分页的时候的数据处理
     if (pData.value.tableSetUp.showPagination) {
-        if (pData.value.tableSetUp.showPagination.pageSizeOptions) {
+        if (pData.value.tableSetUp.showPagination) {
             pData.value.tableData = dataGrouping(props.tableData, pageSize.value, 1)
         } else {
             pData.value.tableData = dataGrouping(props.tableData, 10, 1)
@@ -252,7 +263,7 @@ onMounted(() => {
         columnDrop();
     }
     // 数据量大于某个值时开启虚拟列表
-    if (props.tableData.length > endIndex.value) {
+    if (props.tableData.length > 500 || pData.value.tableSetUp.virtualList) {
         // 绑定事件
         nextTick(() => {
             lazyLoading()
@@ -264,9 +275,9 @@ onMounted(() => {
 const advancedSearch = () => {
     debugger
 }
-
-const rowStyle = () => {
-    
+// 动态设置行style样式
+const rowStyle = ({ row, rowIndex }) => {
+    emits("rowStyle", row, rowIndex)
 }
 
 defineExpose({
@@ -286,7 +297,7 @@ defineExpose({
                   :height="tabelHeight"
                   :max-height="pData.tableSetUp.maxHeight"
                   :highlight-current-row="pData.tableSetUp.highlightCurrentRow"
-                  :scrollbar-always-on:="pData.tableSetUp.scrollbarAlwaysOn"
+                  :scrollbar-always-on="pData.tableSetUp.scrollbarAlwaysOn"
                   :sort-orders="pData.tableSetUp.sortOrders"
                   :sortable="true"
                   :default-sort="pData.tableSetUp.defaultSort"
@@ -296,6 +307,7 @@ defineExpose({
                   @row-dblclick="rowDblClick"
                   @selection-change="handleSelectionChange"
                   @sort-change="changeTableSort"
+                  @current-change="handleCurrentChange"
                   style="width: 100%">
 
             <el-table-column v-if="pData.tableSetUp.showSelection"

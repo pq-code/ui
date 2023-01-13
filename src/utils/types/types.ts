@@ -14,9 +14,9 @@ declare namespace Domains {
   }
 
   interface showOperation {
-    showDelLine?: boolean;
-    showEditLine?: boolean;
-    showView?: boolean;
+    showDelLine: boolean;
+    showEditLine: boolean;
+    showView: boolean;
   }
 
   interface tableSetUp {
@@ -30,12 +30,13 @@ declare namespace Domains {
     selectFn?: (row: object, index: number) => boolean;
     readonly?: boolean;
     tableColumns?: Array<tableRow>;
-    showOperation?: showOperation | boolean;
+    showOperation?: showOperation;
     showSummary?: boolean | [];
     draggable?: boolean;
     showPagination?: showPagination;
     pageSize?: string;
     pageSizeOptions?: Array<string>;
+    virtualList?: boolean;
   }
 
   interface showPagination {
@@ -57,3 +58,5 @@ declare namespace Domains {
     data: T[];
   }
 }
+
+export type { Domains };

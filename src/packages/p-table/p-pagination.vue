@@ -32,12 +32,12 @@ const total = ref(props.totals)
 const currentPages = ref(1)
 
 
-const sizeChange = (e) => {
+const sizeChange = (e: number) => {
     pageSize.value = e
     emits('sizeChange', e)
 }
 
-const currentChange = (e) => {
+const currentChange = (e: number) => {
     emits('currentChange', e)
 }
 

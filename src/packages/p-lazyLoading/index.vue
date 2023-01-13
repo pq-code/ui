@@ -4,8 +4,8 @@ import { generateDataFn } from '../../utils/table';
 
 let screenHeight = ref()
 
-const scrollEvent = (e) => {
-    screenHeight.value = e.clientHeight
+const scrollEvent = (e: object) => {
+    // screenHeight.value = e?.clientHeight
 }
 
 const listHeight = computed(() => {
@@ -13,7 +13,7 @@ const listHeight = computed(() => {
 })
 
 const getTransform = computed(() => {
-
+    return ''
 })
 
 const itemSize = computed(() => {
@@ -31,7 +31,7 @@ const data = generateDataFn(10, 10000)
         <div class="infinite-list-phantom"
              :style="{ height: listHeight + 'px' }"></div>
         <div class="infinite-list"
-             :style="{ transform: getTransform }">
+             :style="{ 'transform': getTransform }">
             <div ref="items"
                  class="infinite-list-item"
                  v-for="item in data"

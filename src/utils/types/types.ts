@@ -37,6 +37,9 @@ declare namespace Domains {
     pageSize?: string;
     pageSizeOptions?: Array<string>;
     virtualList?: boolean;
+    limit?: number,
+    offset?: number,
+    advancedSearch?: boolean; // 高级搜索
   }
 
   interface showPagination {

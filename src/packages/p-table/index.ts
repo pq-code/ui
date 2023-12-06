@@ -1,11 +1,4 @@
 export const tableColumnsList = [
-  //   {
-  //     prop: 'index',
-  //     label: '序号',
-  //     type: '',
-  //     width: '60',
-  //     readonly: true,
-  //   },
   {
     prop: 'column-0',
     label: '列表1',

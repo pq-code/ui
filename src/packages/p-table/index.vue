@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUpdated, ref, watch, nextTick } from "vue";
-import { ElTable } from "element-plus";
+import { ColumnStyle, ElTable, SummaryMethod } from "element-plus";
 import Sortable from "sortablejs";
 import PPagination from "./p-pagination.vue";
 import { dataGrouping } from "./table";
@@ -73,6 +73,7 @@ const handleDelete = (index: String, row: object) => {
 
 // 编辑
 const handleEdit = (index: String, row: object) => {
+  console.log(index, row);
   emits("handleEdit", index, row);
 };
 
@@ -110,7 +111,7 @@ const getDetails = (e: object, column: Object) => {
       pData.value.tableSetUp.showSelection &&
       !pData.value.tableSetUp.selectFn
     ) {
-      tableRef.value.toggleRowSelection(e);
+      tableRef.value!.toggleRowSelection(e, column);
     }
   }
 };
@@ -190,7 +191,7 @@ const columnDrop = () => {
 const getSummaries = (param: Domains.SummaryMethodProps) => {
   const { columns, data } = param;
   const sums: string[] = [];
-  columns.forEach((column: object, index) => {
+  columns.forEach((column, index) => {
     if (index === 0 && pData.value.tableSetUp.showSelection) {
       sums[index] = "合计";
       return;
@@ -221,7 +222,7 @@ const getSummaries = (param: Domains.SummaryMethodProps) => {
   return sums;
 };
 
-let pageSize = ref(
+let pageSize: any = ref(
   pData.value.tableSetUp.showPagination?.pageSize
     ? pData.value.tableSetUp.showPagination?.pageSize
     : pData.value.tableSetUp?.showPagination?.pageSizeOptions[0]
@@ -255,8 +256,11 @@ onUpdated(() => {
 });
 
 // 虚拟列表
-const handlerLazyLoad = (e) => {
-  if (pageSize.value > 500 || pData.value.tableSetUp.virtualList) {
+const handlerLazyLoad = (e: any) => {
+  if (
+    (pageSize && pageSize.value > 500) ||
+    pData.value.tableSetUp.virtualList
+  ) {
     startIndex.value = Math.floor(e.target.scrollTop / 50);
     endIndex.value = startIndex.value + Math.ceil(500 / 50);
     pData.value.tableData = pageSizeList.value.slice(
@@ -265,8 +269,10 @@ const handlerLazyLoad = (e) => {
     );
     const tabel = document.getElementById(`${randomId.value}`);
     const arr = tabel?.getElementsByClassName("el-table__body");
-    const target = arr ? arr[0] : {};
-    target.style.transform = `translate3D(0,${startIndex.value * 50}px,0)`;
+    if (arr) {
+      const target = arr[0] as HTMLImageElement;
+      target.style.transform = `translate3D(0,${startIndex.value * 50}px,0)`;
+    }
   }
 };
 
@@ -305,8 +311,9 @@ onMounted(() => {
 
 // 高级搜索
 const advancedSearch = () => {};
+
 // 动态设置行style样式
-const rowStyle = ({ row, rowIndex }) => {
+const rowStyle = ({ row, rowIndex }): any => {
   emits("rowStyle", row, rowIndex);
 };
 
@@ -365,19 +372,25 @@ defineExpose({
           :align="item.align"
         >
           <template #header v-if="item.required">
-            <span style="color: red">*</span>{{ item.label }}
+            <span style="color: red">*</span>{{ " " + item.label }}
           </template>
+
           <template
-            slot-scope="scope"
-            v-slot="scope"
-            :key="`input_${scope.$index}_${index}`"
+            #default="scope"
             v-if="item.slotName != null && item.slotName != ''"
           >
-            <slot :name="item.slotName" v-bind:scope="scope"></slot>
+            <slot
+              :key="`input_${scope.$index}_${index}`"
+              :name="item.slotName"
+              :item="scope"
+              :index="scope.$index"
+              :prop="scope.row[item.prop]"
+            ></slot>
           </template>
-          <template slot-scope="scope" v-slot="scope" v-else>
+
+          <template #default="scope" v-else>
             <el-input
-              v-if="!item.readonly"
+              v-if="!item.readonly && item.prop !== 'index'"
               :key="`input_${scope.$index}_${index}`"
               v-model="scope.row[item.prop]"
             />
@@ -513,5 +526,8 @@ defineExpose({
 .tabel-default {
   width: 100%;
   height: 100%;
+}
+.draggable {
+  background-color: rgb(35, 156, 255);
 }
 </style>

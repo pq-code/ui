@@ -1,3 +1,6 @@
+import { Sort } from "element-plus";
+// import type { TableColumnCtx } from 'element-plus'
+import { TableColumnCtx } from "element-plus/es/components/table/src/table-column/defaults";
 declare namespace Domains {
   interface tableRow {
     prop: string;
@@ -25,17 +28,17 @@ declare namespace Domains {
     highlightCurrentRow?: boolean;
     scrollbarAlwaysOn?: boolean;
     sortOrders?: Array<string>;
-    defaultSort?: object;
+    defaultSort?: Sort;
     showSelection?: boolean;
     selectFn?: (row: object, index: number) => boolean;
     readonly?: boolean;
     tableColumns?: Array<tableRow>;
     showOperation?: showOperation;
-    showSummary?: boolean | [];
+    showSummary?: boolean | Array<string>;
     draggable?: boolean;
     showPagination?: showPagination;
-    pageSize?: string;
-    pageSizeOptions?: Array<string>;
+    pageSize?: number;
+    pageSizeOptions?: Array<number>;
     virtualList?: boolean;
     limit?: number,
     offset?: number,
@@ -57,8 +60,8 @@ declare namespace Domains {
   }
 
   interface SummaryMethodProps<T = Product> {
-    columns: [];
-    data: T[];
+    columns: TableColumnCtx<T>[]
+    data: T[]
   }
 }
 

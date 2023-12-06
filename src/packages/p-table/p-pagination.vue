@@ -1,60 +1,61 @@
-<script setup lang='ts'>
-import { ref, watch, computed, onMounted } from 'vue';
-const emits = defineEmits(['sizeChange', 'currentChange'])
+<script setup lang="ts">
+import { ref, watch, computed, onMounted } from "vue";
+const emits = defineEmits(["sizeChange", "currentChange"]);
 
 const props = defineProps({
-    totals: {
-        type: Number,
-        default: 100
+  totals: {
+    type: Number,
+    default: 100,
+  },
+  pageSizes: {
+    type: Number,
+    default: 10,
+  },
+  pageSizeOptions: {
+    type: Array,
+    default() {
+      return [10, 20, 50, 100, 200, 500, 1000];
     },
-    pageSizes: {
-        type: Number,
-        default: 10
-    },
-    pageSizeOptions: {
-        type: Array,
-        default() {
-            return [10, 20, 50, 100, 200, 500, 1000];
-        },
-    },
-    background: {
-        type: Boolean,
-        default: true
-    },
-    pagerCount: {
-        type: Number,
-        default: 5
-    }
+  },
+  background: {
+    type: Boolean,
+    default: true,
+  },
+  pagerCount: {
+    type: Number,
+    default: 5,
+  },
 });
 
-const pageSize = ref(props.pageSizes)
-const total = ref(props.totals)
-const currentPages = ref(1)
-
+const pageSize = ref(props.pageSizes);
+const total = ref(props.totals);
+const currentPages = ref(1);
 
 const sizeChange = (e: number) => {
-    pageSize.value = e
-    emits('sizeChange', e)
-}
+  pageSize.value = e;
+  emits("sizeChange", e);
+};
 
 const currentChange = (e: number) => {
-    emits('currentChange', e)
-}
+  emits("currentChange", e);
+};
 
 onMounted(() => {
-
-})
+  sizeChange(props.pageSizes || props.pageSizeOptions[0]);
+});
 </script>
 <template>
-    <el-pagination :total="total"
-                   :page-size="pageSize"
-                   :background="background"
-                   :pager-count="pagerCount"
-                   :page-sizes="pageSizeOptions"
-                   layout="prev, pager, next, jumper, sizes, total"
-                   @size-change="sizeChange"
-                   @current-change="currentChange">
-    </el-pagination>
+  <el-pagination
+    :total="total"
+    :page-size="pageSize"
+    :background="background"
+    :pager-count="pagerCount"
+    :page-sizes="pageSizeOptions"
+    layout="prev, pager, next, jumper, sizes, total"
+    @size-change="sizeChange"
+    @current-change="currentChange"
+  >
+  </el-pagination>
 </template>
 
 <style lang="lcss" scoped></style>

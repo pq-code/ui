@@ -17,7 +17,6 @@ const data = generateDataFn(10, 10000);
 // }
 
 const tableSetUp = ref({
-  readonly: true,
   tableColumns: tableColumnsList,
   highlightCurrentRow: false,
   scrollbarAlwaysOn: false,
@@ -26,8 +25,10 @@ const tableSetUp = ref({
   draggable: true,
   showSelection: true,
   showSummary: true,
+  advancedSearch: true,
+  virtualList: true, // 虚拟列表启用
   defaultSort: {
-    prop: "a",
+    prop: "column-0",
     order: "ascending",
   },
   sortOrders: ["descending", "ascending"],
@@ -49,21 +50,17 @@ const tableData = ref(data);
 
 const handleDelete = (e: any) => {
   console.log(e);
-  debugger;
 };
 
 const handleCurrentChange = (e: any) => {
   console.log(e);
-  debugger;
 };
 
 const 选中 = () => {
   pTable.value.setCurrentRow([tableData.value[0], tableData.value[2]]);
 };
 
-const handleSelectionChange = (e: any) => {
-  debugger;
-};
+const handleSelectionChange = (e: any) => {};
 </script>
 
 <template>
@@ -75,11 +72,23 @@ const handleSelectionChange = (e: any) => {
     @handleSelection-change="handleSelectionChange"
     @handleDelete="handleDelete"
   >
-    <!-- <template v-slot:tableAction="slotProps">
-            <el-input size="mini"
-                      v-model="slotProps.scope.row['a']">
-            </el-input>
-        </template> -->
+    <template #requiredSelect="rscope">
+      <el-input size="mini" v-model="rscope.prop"> </el-input>
+      <!-- {{ rscope.prop }} -->
+      <!-- <el-select v-model="rscope.prop" class="m-2" placeholder="Select">
+        <el-option
+          v-for="item in [
+            {
+              label: '21',
+              value: '2',
+            },
+          ]"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value"
+        />
+      </el-select> -->
+    </template>
   </P-Table>
   <!-- <p-lazyloading>
 
